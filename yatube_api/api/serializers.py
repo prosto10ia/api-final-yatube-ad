@@ -35,19 +35,42 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='users-detail',
+        lookup_field='username'
+    )
+
+    class Meta:
+        model = User
+        fields = ('email', 'username', 'url')
+
+
 class FollowSerializer(serializers.ModelSerializer):
     user = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
     )
+    user_url = serializers.HyperlinkedRelatedField(
+        source='user',
+        read_only=True,
+        view_name='users-detail',
+        lookup_field='username'
+    )
     following = serializers.SlugRelatedField(
         queryset=User.objects.all(),
         slug_field='username'
     )
+    following_url = serializers.HyperlinkedRelatedField(
+        source='following',
+        read_only=True,
+        view_name='users-detail',
+        lookup_field='username'
+    )
 
     class Meta:
         model = Follow
-        fields = ('user', 'following')
+        fields = ('user', 'user_url', 'following', 'following_url')
 
     def validate_following(self, value):
         user = self.context['request'].user
